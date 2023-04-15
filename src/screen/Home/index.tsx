@@ -1,5 +1,5 @@
 import axios from "axios"
-import React, { useEffect } from "react"
+import React, { useEffect, useState } from "react"
 //@ts-ignore
 import { API_URL } from "@env"
 import {
@@ -18,14 +18,19 @@ import {
 } from "native-base"
 import { ITheCat } from "../../interface"
 import { Pressable } from "react-native"
+import { useNavigation } from "@react-navigation/native"
+import { StackParamList } from "../../routes/RouteStack"
+import { StackNavigationProp } from "@react-navigation/stack"
 
 type fetchData = {
   dataTheCat?: Array<ITheCat>
 }
 
 export const Home = ({ dataTheCat }: fetchData) => {
+  const navigation = useNavigation<StackNavigationProp<StackParamList>>()
+  const [isExpand, setIsExpand] = React.useState<any>([])
+  const [isExpandSearch, setIsExpandSearch] = React.useState<any>([])
   const [data, setData] = React.useState(dataTheCat)
-  const [isLoading, setIsLoading] = React.useState(false)
   const [dataSearch, setDataSearch] = React.useState(dataTheCat)
   const [isSearch, setIsSearch] = React.useState(false)
   const [search, setSearch] = React.useState("")
@@ -65,6 +70,18 @@ export const Home = ({ dataTheCat }: fetchData) => {
       setDataSearch([])
     }
   }, [search, filter])
+
+  const tempArrIsExpand = (index: any, item: boolean) => {
+    const tempArr = [...isExpand]
+    tempArr[index] = item
+    setIsExpand(tempArr)
+  }
+
+  const tempArrIsExpanSearch = (index: any, item: boolean) => {
+    const tempArr = [...isExpandSearch]
+    tempArr[index] = item
+    setIsExpandSearch(tempArr)
+  }
 
   return (
     <Container
@@ -146,16 +163,14 @@ export const Home = ({ dataTheCat }: fetchData) => {
                 >
                   Your Search
                 </Text>
-                <Text
-                  fontSize={"sm"}
-                  color={"orange.600"}
-                  fontWeight={"medium"}
-                >
-                  See More
-                </Text>
               </HStack>
               {dataSearch?.slice(0, 5).map((item, index) => (
-                <Pressable key={index} onPress={() => console.log("test")}>
+                <Pressable
+                  key={index}
+                  onPress={() =>
+                    tempArrIsExpanSearch(index, !isExpandSearch[index])
+                  }
+                >
                   <Box
                     w={"full"}
                     bg={"gray.800"}
@@ -163,7 +178,14 @@ export const Home = ({ dataTheCat }: fetchData) => {
                     rounded={"xl"}
                     shadow={"9"}
                   >
-                    <HStack alignItems={"center"}>
+                    <HStack
+                      alignItems={"center"}
+                      pb={2}
+                      borderBottomColor={
+                        isExpandSearch[index] ? "orange.600" : ""
+                      }
+                      borderBottomWidth={isExpandSearch[index] ? 1 : 0}
+                    >
                       <VStack space={2} flex={1} mr={2}>
                         <Text color={"white"} fontSize={"sm"} noOfLines={1}>
                           Cat Name: {item.name}
@@ -171,14 +193,34 @@ export const Home = ({ dataTheCat }: fetchData) => {
                         <Text color={"white"} fontSize={"sm"} noOfLines={1}>
                           Origin : {item.origin}
                         </Text>
-                        <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                        <Text
+                          color={"white"}
+                          fontSize={"sm"}
+                          noOfLines={isExpandSearch[index] ? 5 : 1}
+                        >
                           Temprament : {item.temperament}
                         </Text>
                       </VStack>
                       <Text color={"orange.600"} fontSize={"sm"}>
-                        See Detail
+                        {isExpandSearch[index] ? "Close" : "Show More"}
                       </Text>
                     </HStack>
+                    {isExpandSearch[index] ? (
+                      <Box pt={2}>
+                        <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                          Weight Imperial: {item.weight?.imperial}
+                        </Text>
+                        <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                          Weight Metric : {item.weight?.metric}
+                        </Text>
+                        <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                          Life Span : {item.life_span}
+                        </Text>
+                        <Text color={"white"} fontSize={"sm"} noOfLines={5}>
+                          Description : {item.description}
+                        </Text>
+                      </Box>
+                    ) : null}
                   </Box>
                 </Pressable>
               ))}
@@ -188,13 +230,18 @@ export const Home = ({ dataTheCat }: fetchData) => {
             <Text fontSize={"lg"} color={"white"} fontWeight={"bold"} flex={1}>
               List Cat
             </Text>
-            <Text fontSize={"sm"} color={"orange.600"} fontWeight={"medium"}>
-              See More
-            </Text>
+            <Pressable onPress={() => navigation.push("SeeMoreListCat")}>
+              <Text fontSize={"sm"} color={"orange.600"} fontWeight={"medium"}>
+                See More
+              </Text>
+            </Pressable>
           </HStack>
           <VStack mt={5} space={2}>
             {data?.slice(0, 5).map((item, index) => (
-              <Pressable key={index} onPress={() => console.log("test")}>
+              <Pressable
+                key={index}
+                onPress={() => tempArrIsExpand(index, !isExpand[index])}
+              >
                 <Box
                   w={"full"}
                   bg={"gray.800"}
@@ -202,7 +249,12 @@ export const Home = ({ dataTheCat }: fetchData) => {
                   rounded={"xl"}
                   shadow={"9"}
                 >
-                  <HStack alignItems={"center"}>
+                  <HStack
+                    alignItems={"center"}
+                    pb={2}
+                    borderBottomWidth={isExpand[index] ? 1 : 0}
+                    borderBottomColor={isExpand[index] ? "orange.600" : ""}
+                  >
                     <VStack space={2} flex={1} mr={2}>
                       <Text color={"white"} fontSize={"sm"} noOfLines={1}>
                         Cat Name: {item.name}
@@ -210,7 +262,11 @@ export const Home = ({ dataTheCat }: fetchData) => {
                       <Text color={"white"} fontSize={"sm"} noOfLines={1}>
                         Origin : {item.origin}
                       </Text>
-                      <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                      <Text
+                        color={"white"}
+                        fontSize={"sm"}
+                        noOfLines={isExpand[index] ? 5 : 1}
+                      >
                         Temprament : {item.temperament}
                       </Text>
                     </VStack>
@@ -218,6 +274,22 @@ export const Home = ({ dataTheCat }: fetchData) => {
                       See Detail
                     </Text>
                   </HStack>
+                  {isExpand[index] ? (
+                    <Box pt={2}>
+                      <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                        Weight Imperial: {item.weight?.imperial}
+                      </Text>
+                      <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                        Weight Metric : {item.weight?.metric}
+                      </Text>
+                      <Text color={"white"} fontSize={"sm"} noOfLines={1}>
+                        Life Span : {item.life_span}
+                      </Text>
+                      <Text color={"white"} fontSize={"sm"} noOfLines={5}>
+                        Description : {item.description}
+                      </Text>
+                    </Box>
+                  ) : null}
                 </Box>
               </Pressable>
             ))}
